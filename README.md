@@ -4,7 +4,7 @@
 
 <div align="center">
   <h3 align="center">
-     A Discord library focused on bot development
+     A Rust Discord library focused on bot development
   </h3>
   Note: Currently Experimental, Any changes will most likely be breaking.
 </p>
