@@ -1,0 +1,13 @@
+[package]
+name = "tonsoe"
+version = "0.0.1-alpha"
+description = "A Discord library focused on bot development"
+edition = "2021"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["discord", "bot", "client",  "async", "tonsoe"]
+categories = ["asynchronous", "api-bindings"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
