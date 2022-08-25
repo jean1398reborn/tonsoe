@@ -1,7 +1,10 @@
-<h1 align="center">
-    Tonsoe
-</h1>
-### "A Discord library focused on bot development"
----
+<div align="center">
+  <h1><strong>Tonsoe</strong></h1>
+</div>
 
-Note: Heavily work in progress & Experimental, use at your own risk. All changes will most likely be breaking.
+<div align="center">
+  <h3 align="center">
+     A Discord library focused on bot development
+  </h3>
+  Note: Currently Experimental, Any changes will most likely be breaking.
+</p>
