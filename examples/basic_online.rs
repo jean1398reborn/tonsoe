@@ -1,7 +1,9 @@
 //! Example showing most basic bot functionality of coming online.
 // Not Complete!
 
+// You can use ENV variables for the token if you do not want it in your code!
 use std::env;
+
 use tonsoe::bot_client::*;
 
 fn main() {
