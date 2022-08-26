@@ -1,6 +1,9 @@
 
-use bitflags::bitflags;
-use crate::client::*;
+use bitflags;
+use reqwest::Method;
+
+use crate::*;
+use client::*;
 
 /// Basic structure which represents a Bot inside the library
 /// Not the same as a discord bot!
@@ -9,9 +12,22 @@ pub struct Bot {
     /// The discord token for the bot utilised for connecting & accessing the discord api.
     pub token: String,
 
-    /// Bitflags which allow for the selection of what gateway events to recieve, Some are privileged and require being toggled on in the developer page.
-    /// https://discord.com/developers/docs/topics/gateway#list-of-intents
+    /// [Bitflags which allow for the selection of what gateway events to recieve][https://discord.com/developers/docs/topics/gateway#list-of-intents]
+    /// Some are privileged and require being toggled on in the developer page.
     pub intents: Intents,
+
+    /// Enum option which determines if automatic sharding should be used or if shards should be created based on a set amount.
+    pub sharding_option: ShardingOption,
+}
+
+impl Default for Bot {
+    fn default() -> Self {
+        Self {
+            token: String::new(),
+            intents: Intents::empty(),
+            sharding_option: ShardingOption::Automatic,
+        }
+    }
 }
 
 impl Bot {
@@ -21,6 +37,7 @@ impl Bot {
         Self {
             token,
             intents: Intents::empty(),
+            ..Default::default()
         }
     }
 
@@ -39,8 +56,18 @@ impl Bot {
         self.intents.set(intents, value);
     }
 
-    /// Main execution for a [`Bot`], initialisation and spawning of a [`DiscordClient`] & Related processes occur.
-    pub fn elevate(self) {
+    /// Main execution for a [`Bot`] and initialisation of a [`DiscordClient`]
+    /// Establish a connection to the Discord Gateway & start listening to the events.
+    pub async fn elevate(self) {
+
+        // Create the DiscordHttpClient to request initial data required before the bot can establish a connection.
+        let http_client = DiscordHttpClient::new(BASE_API_URL, DISCORD_API_VERSION, self.token);
+
+        // Request gateway information for connecting & sharding information
+        let gateway_get_request = DiscordHttpRequest::new(DiscordHttpReqType::GetGatewayBot, Method::GET);
+
+        let response = http_client.request(gateway_get_request).await
+            .expect("Failed to retrieve Gateway Get Bot information required for Gateway connection.");
 
     }
 
@@ -48,7 +75,7 @@ impl Bot {
 
 /// Enum for the different options available for sharding when the [`Bot`] is ran.
 /// Only Shard 0 will recieve DMs, 
-pub enum ShardingOptions {
+pub enum ShardingOption {
 
     /// Automatically sets up sharding based on information about Session Start Limits.
     Automatic,
@@ -59,8 +86,7 @@ pub enum ShardingOptions {
 
 bitflags::bitflags! {
 
-    /// Bitflags Struct which represents all the possible intents for the Gateway Identify handshake event.
-    /// https://discord.com/developers/docs/topics/gateway#list-of-intents
+    /// [Bitflags Struct which represents all the possible intents for the Gateway Identify handshake event.][https://discord.com/developers/docs/topics/gateway#list-of-intents]
     pub struct Intents: u32 {
         
         const GUILDS = 1 << 0;

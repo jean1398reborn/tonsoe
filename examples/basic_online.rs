@@ -2,8 +2,8 @@
 // Not Complete!
 
 use tonsoe::bot::*;
-
-fn main() {
+#[tokio::main]
+async fn main() {
 
     // Grab the token from https://discord.com/developers
     // Note: You need to get this before the BotBuilder is initialised as it cannot be changed after.
@@ -21,5 +21,5 @@ fn main() {
     bot.set_intents(bot_intents, true);
 
     // Execute the bot.
-    bot.elevate()
+    bot.elevate().await;
 }
