@@ -1,12 +1,15 @@
 //! A file specifically designated to creation of structs which represent Payloads & Objects being sent through the Discord Gateway & related.
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 /// [The limits imposed on new sessions which are started.][https://discord.com/developers/docs/topics/gateway#session-start-limit-object]
 pub struct SessionStartLimit {
+
+    #[serde(rename = "total")]
     /// The total number of session starts the current [`Bot`] is allowed
     pub total_sessions: u32,
 
+    #[serde(rename = "remaining")]
     /// The remaining number of session starts the current [`Bot`] is allowed
     pub remaining_sessions: u32,
 
@@ -19,7 +22,7 @@ pub struct SessionStartLimit {
 }
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 /// A struct which represents the response from the GetGatewayBot request
 pub struct GetGatewayBotResponse {
 

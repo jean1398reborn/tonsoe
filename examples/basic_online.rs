@@ -7,7 +7,8 @@ async fn main() {
 
     // Grab the token from https://discord.com/developers
     // Note: You need to get this before the BotBuilder is initialised as it cannot be changed after.
-    let token: String = String::from("Token");
+    let token: String = std::env::var("BOT_TOKEN")
+        .expect("Attempted to retrieve BOT_TOKEN from env var");
 
     // Create a new bot
     let mut bot = Bot::new(token);

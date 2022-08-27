@@ -1,9 +1,10 @@
 
 use bitflags;
 use reqwest::Method;
-
-use crate::*;
-use client::*;
+use crate::client::*;
+use crate::gateway_structs::GetGatewayBotResponse;
+use crate::{BASE_API_URL, DISCORD_API_VERSION};
+use tokio::sync::*;
 
 /// Basic structure which represents a Bot inside the library
 /// Not the same as a discord bot!
@@ -60,15 +61,31 @@ impl Bot {
     /// Establish a connection to the Discord Gateway & start listening to the events.
     pub async fn elevate(self) {
 
-        // Create the DiscordHttpClient to request initial data required before the bot can establish a connection.
+        // Create the DiscordHttpClient to be able to request data from the Discord Api.
         let http_client = DiscordHttpClient::new(BASE_API_URL, DISCORD_API_VERSION, self.token);
 
-        // Request gateway information for connecting & sharding information
-        let gateway_get_request = DiscordHttpRequest::new(DiscordHttpReqType::GetGatewayBot, Method::GET);
+        // Setup the channel for Requests to the Discord api through the DiscordHttpClient
+        let (channel_sender, channel_reciever) = mpsc::channel(50);
 
-        let response = http_client.request(gateway_get_request).await
-            .expect("Failed to retrieve Gateway Get Bot information required for Gateway connection.");
+        // Spawn the DiscordHttpClientRequest processing channel.
+        tokio::spawn(
+            async move {
+                http_client.handle_channel_inbound_requests(channel_reciever).await
+            }
+        );
 
+        // Cloning is an acceptable operation as Sender contains an arc so this acts as just cloning a pointer to the sender
+        let client_sender = channel_sender.clone();
+
+        // Send a GET request with path gateway/bot/ so we can get information on connecting to the gateway & sharding.
+        let gateway_bot_response : GetGatewayBotResponse = send_discord_http_request(DiscordHttpRequest::new(DiscordHttpReqType::GetGatewayBot, Method::GET), client_sender)
+            .await
+            .json()
+            .await
+            .expect("Attempted to convert content of GetGatewayBot response into struct");
+        
+        println!("{:#?}", gateway_bot_response);
+        
     }
 
 }
