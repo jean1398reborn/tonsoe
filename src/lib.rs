@@ -8,8 +8,9 @@ pub const BASE_API_URL : &'static str = "https://discord.com/api";
 /// Represents the version of the discord api utilised by the library
 pub const DISCORD_API_VERSION: u32 = 10;
 
-
+ 
 pub mod bot;
-pub mod client;
+pub mod websocket;
 pub mod gateway;
 pub mod gateway_structs;
+pub mod http;

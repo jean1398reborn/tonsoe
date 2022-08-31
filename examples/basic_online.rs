@@ -7,9 +7,9 @@ async fn main() {
 
     // Grab the token from https://discord.com/developers
     // Note: You need to get this before the BotBuilder is initialised as it cannot be changed after.
-    let token: String = std::env::var("BOT_TOKEN")
+    let token = std::env::var("BOT_TOKEN")
         .expect("Attempted to retrieve BOT_TOKEN from env var");
-
+    
     // Create a new bot
     let mut bot = Bot::new(token);
 
@@ -21,6 +21,6 @@ async fn main() {
     // Set the intents given by bot_intents to be true
     bot.set_intents(bot_intents, true);
 
-    // Execute the bot.
-    bot.elevate().await;
+    // Execute the bot, if an error occurs in the setup process then it is returned 
+    println!("{:#?}", bot.elevate().await);
 }

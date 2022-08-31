@@ -1,17 +1,22 @@
 
+use std::rc::Rc;
+use std::str::FromStr;
+use std::sync::Arc;
+
 use bitflags;
-use reqwest::Method;
-use crate::client::*;
+use reqwest::{Method, Url};
+use crate::http::*;
 use crate::gateway_structs::GetGatewayBotResponse;
 use crate::{BASE_API_URL, DISCORD_API_VERSION};
+use crate::websocket::*;
 use tokio::sync::*;
+use anyhow::{Result, Context};
 
 /// Basic structure which represents a Bot inside the library
-/// Not the same as a discord bot!
-pub struct Bot {
+pub struct Bot {        
 
     /// The discord token for the bot utilised for connecting & accessing the discord api.
-    pub token: String,
+    pub token:  Arc<str>,
 
     /// [Bitflags which allow for the selection of what gateway events to recieve][https://discord.com/developers/docs/topics/gateway#list-of-intents]
     /// Some are privileged and require being toggled on in the developer page.
@@ -19,26 +24,17 @@ pub struct Bot {
 
     /// Enum option which determines if automatic sharding should be used or if shards should be created based on a set amount.
     pub sharding_option: ShardingOption,
+           
 }
 
-impl Default for Bot {
-    fn default() -> Self {
-        Self {
-            token: String::new(),
-            intents: Intents::empty(),
-            sharding_option: ShardingOption::Automatic,
-        }
-    }
-}
-
-impl Bot {
+impl Bot {          
 
     /// Create a new [`Bot`] requiring basic fields set at initialisation
     pub fn new(token: String) -> Self {
         Self {
-            token,
+            token: token.into(),
             intents: Intents::empty(),
-            ..Default::default()
+            sharding_option: ShardingOption::Automatic,
         }
     }
 
@@ -59,32 +55,38 @@ impl Bot {
 
     /// Main execution for a [`Bot`] and initialisation of a [`DiscordClient`]
     /// Establish a connection to the Discord Gateway & start listening to the events.
-    pub async fn elevate(self) {
+    pub async fn elevate(self) -> Result<()> {
 
         // Create the DiscordHttpClient to be able to request data from the Discord Api.
-        let http_client = DiscordHttpClient::new(BASE_API_URL, DISCORD_API_VERSION, self.token);
+        let http_client = DiscordHttpClient::new(BASE_API_URL, DISCORD_API_VERSION, self.token.clone())
+            .context("Failed to create DiscordHttpClient")?;
+        
 
         // Setup the channel for Requests to the Discord api through the DiscordHttpClient
-        let (channel_sender, channel_reciever) = mpsc::channel(50);
+        let (http_channel_sender, http_channel_reciever) = mpsc::channel(50);
 
         // Spawn the DiscordHttpClientRequest processing channel.
         tokio::spawn(
             async move {
-                http_client.handle_channel_inbound_requests(channel_reciever).await
+                http_client.handle_channel_inbound_requests(http_channel_reciever).await
             }
         );
 
         // Cloning is an acceptable operation as Sender contains an arc so this acts as just cloning a pointer to the sender
-        let client_sender = channel_sender.clone();
+        let client_sender = http_channel_sender.clone();
 
-        // Send a GET request with path gateway/bot/ so we can get information on connecting to the gateway & sharding.
-        let gateway_bot_response : GetGatewayBotResponse = send_discord_http_request(DiscordHttpRequest::new(DiscordHttpReqType::GetGatewayBot, Method::GET), client_sender)
-            .await
-            .json()
-            .await
-            .expect("Attempted to convert content of GetGatewayBot response into struct");
+        // Send a GET request with path gateway/bot/ so we can get information on connecting to the gateway & sharding
+        // Also serves as a way to check if the token is valid or not etc. 
+        let gateway_bot_response : GetGatewayBotResponse = DiscordHttpRequest::new(DiscordHttpReqType::GetGatewayBot, Method::GET).request(client_sender)
+            .await    
+            .context("Failed in retrieving gateway/bot required for starting up discord Gateway connection.")?; 
+
+        // Create a sharded [`DiscordGatewayClient`]
+        let gateway_client = DiscordGatewayClient::new_with_shards(&self, gateway_bot_response).await
+            .context("Failed to create DiscordGatewayClient")?;
         
-        println!("{:#?}", gateway_bot_response);
+        tokio::time::sleep(tokio::time::Duration::from_secs(1000)).await;
+        Ok(())
         
     }
 
@@ -100,6 +102,7 @@ pub enum ShardingOption {
     /// Force [`Bot`] to utilise a set amount of shards
     SetAmount(u32),
 }
+
 
 bitflags::bitflags! {
 
