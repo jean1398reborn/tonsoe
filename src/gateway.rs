@@ -1,12 +1,12 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 use futures_util::StreamExt;
 use serde::Serialize;
-use tokio::net::*;
-use tokio_tungstenite::*;
-use tokio::sync::mpsc::{Sender as GatewaySinkSender, Receiver as GatewaySinkReceiver};
-use tokio::sync::broadcast::{Sender as GatewayStreamSender, Receiver as GatewayStreamReciever};
+
+
+use tokio::sync::mpsc::{Sender as GatewaySinkSender};
+use tokio::sync::broadcast::{Sender as GatewayStreamSender};
 use tokio::time::*;
 use crate::gateway_structs::{Payload, Identify};
 use crate::websocket::ReadSplitStream;
@@ -93,9 +93,7 @@ impl Gateway {
     pub async fn recieve_gateway_events(self, mut read_stream: ReadSplitStream) {
 
         // Recieve next payload
-        while let (payload) = read_stream.next().await {
-            
-            prin    
+        while let _payload = read_stream.next().await {
 
         }
     }

@@ -17,8 +17,8 @@ use futures_util::stream::SplitStream;
 use reqwest::Url;
 use serde::de::*;
 use tokio::net::TcpStream;
-use tokio::sync::mpsc::{Sender as GatewaySinkSender, Receiver as GatewaySinkReceiver};
-use tokio::sync::broadcast::{Sender as GatewayStreamSender, Receiver as GatewayStreamReciever};
+use tokio::sync::mpsc::{Receiver as GatewaySinkReceiver};
+
 use tokio::sync::*;
 use tokio::task;
 use tokio_tungstenite::MaybeTlsStream;
@@ -143,19 +143,19 @@ impl NewShardToMap for ShardMap {
     async fn add_shard_to_map(&self, shard_id: u32, shard_amount: u32, gateway_url: &Url, identify_payload: Payload<Identify>) -> Result<()> {
 
         // Create the sender and reciever utilised for the Gateway when recieving commands
-        let (sink_channel_sender, mut sink_channel_reciever) = mpsc::channel(32);
+        let (sink_channel_sender, sink_channel_reciever) = mpsc::channel(32);
 
         // Create the sender and reciever utilised for the Gateway when sending responses recieved from discord.
-        let (stream_channel_sender, mut stream_channel_reciever) = broadcast::channel(32);
+        let (stream_channel_sender, _stream_channel_reciever) = broadcast::channel(32);
 
         println!("{:#?}", gateway_url.to_string());
 
         // Since we have to spawn them in order from 0 -> shard_amount we cant spawn them concurrently, utilises except as failing to create a shard can lead to catastrophic failure.
-        let (websocket_stream, response) = tokio_tungstenite::connect_async(gateway_url).await
+        let (websocket_stream, _response) = tokio_tungstenite::connect_async(gateway_url).await
             .expect("Attempted to create Gateway Shard");
 
         // Split the stream up into a sink and a stream for channels.
-        let (mut write_sink, mut read_stream) = websocket_stream.split();
+        let (write_sink, mut read_stream) = websocket_stream.split();
 
         // Get the Hello payload send from discord.
         let hello_payload = read_stream.read_deserialize_next_payload::<Payload<Hello>>().await
@@ -242,7 +242,7 @@ impl DeserializeRecievePayload for ReadSplitStream {
 
 
 /// Process a [`GatewayCommand`] send through the channel into a Message & send the message to Discords gateway.
-pub async fn process_gateway_send_commands(mut sink_channel_reciever: GatewaySinkReceiver<GatewayCommand>, mut sink: WriteSplitSink) {
+pub async fn process_gateway_send_commands(mut sink_channel_reciever: GatewaySinkReceiver<GatewayCommand>, sink: WriteSplitSink) {
     
     // Create a new Mutex with Arc for concurrency with the split sink
     let sink = Arc::new(Mutex::new(sink));

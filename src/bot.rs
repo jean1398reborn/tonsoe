@@ -1,10 +1,10 @@
 
-use std::rc::Rc;
-use std::str::FromStr;
+
+
 use std::sync::Arc;
 
 use bitflags;
-use reqwest::{Method, Url};
+use reqwest::{Method};
 use crate::http::*;
 use crate::gateway_structs::GetGatewayBotResponse;
 use crate::{BASE_API_URL, DISCORD_API_VERSION};
@@ -82,7 +82,7 @@ impl Bot {
             .context("Failed in retrieving gateway/bot required for starting up discord Gateway connection.")?; 
 
         // Create a sharded [`DiscordGatewayClient`]
-        let gateway_client = DiscordGatewayClient::new_with_shards(&self, gateway_bot_response).await
+        let _gateway_client = DiscordGatewayClient::new_with_shards(&self, gateway_bot_response).await
             .context("Failed to create DiscordGatewayClient")?;
         
         tokio::time::sleep(tokio::time::Duration::from_secs(1000)).await;

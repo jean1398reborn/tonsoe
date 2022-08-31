@@ -3,7 +3,7 @@ use reqwest::{Client, Url, Method, Response as HttpResponse, RequestBuilder};
 use reqwest::header::*;
 use serde::{de};
 
-use std::rc::Rc;
+
 use std::str::FromStr;
 use std::sync::Arc;
 

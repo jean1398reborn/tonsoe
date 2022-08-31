@@ -1,5 +1,5 @@
 //! A file specifically designated to creation of structs which represent Payloads & Objects being sent through the Discord Gateway & related.
-use std::{rc::Rc, sync::Arc};
+use std::{sync::Arc};
 
 use serde::{Deserialize, Serialize};
 use tokio_tungstenite::tungstenite::Message;
