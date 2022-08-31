@@ -93,8 +93,8 @@ impl Gateway {
     pub async fn recieve_gateway_events(self, mut read_stream: ReadSplitStream) {
 
         // Recieve next payload
-        while let _payload = read_stream.next().await {
-
+        while let payload = read_stream.next().await {
+            println!("{:?}", payload);
         }
     }
 }

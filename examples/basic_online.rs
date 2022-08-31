@@ -21,6 +21,6 @@ async fn main() {
     // Set the intents given by bot_intents to be true
     bot.set_intents(bot_intents, true);
 
-    // Execute the bot, if an error occurs in the setup process then it is returned 
+    // Execute the bot, Some errors in the setup process are     returned
     println!("{:#?}", bot.elevate().await);
 }
